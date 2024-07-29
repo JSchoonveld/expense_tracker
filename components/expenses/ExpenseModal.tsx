@@ -1,12 +1,12 @@
-import { View, TextInput, StyleSheet, Modal, Text } from 'react-native';
+import {View, TextInput, StyleSheet, Modal, Text} from 'react-native';
 import {useEffect, useState} from 'react';
 import useExpensesStore from "@/store/expenseStore";
-import { Colors } from "@/constants/Colors";
+import {Colors} from "@/constants/Colors";
 import MyButton from "@/components/MyButton";
-import { Expense } from "@/interfaces/expense";
-import RNDateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import {Expense} from "@/interfaces/expense";
+import RNDateTimePicker, {DateTimePickerEvent} from "@react-native-community/datetimepicker";
 
-export function ExpenseModal({ visible }: { visible: boolean }) {
+export function ExpenseModal({visible}: { visible: boolean }) {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [date, setDate] = useState(new Date());
@@ -33,8 +33,19 @@ export function ExpenseModal({ visible }: { visible: boolean }) {
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
     }
 
-    const handleExpense = (): void => {
+    const handleSubmit = (): void => {
         if (!name || !amount) {
+            return;
+        }
+
+        const nameIsValid = name.trim().length > 0;
+
+        const amountIsValid = !isNaN(parseFloat(amount)) && parseFloat(amount) >= 0;
+
+        const dateIsValid = !isNaN(date.getTime());
+
+        if (!nameIsValid || !amountIsValid || !dateIsValid) {
+            // show feedback
             return;
         }
 
@@ -71,24 +82,28 @@ export function ExpenseModal({ visible }: { visible: boolean }) {
                 <Text style={styles.modalHeaderTitle}>{expenseEdited ? 'Edit expense' : 'Add Expense'}</Text>
             </View>
             <View style={styles.container}>
+                <Text style={styles.title}>Your expense</Text>
+                <View style={styles.topRowInputs}>
+                    <TextInput
+                        placeholder="Amount"
+                        inputMode={"decimal"}
+                        value={amount}
+                        onChangeText={setAmount}
+                        style={styles.topRowInput}
+                    />
+                    <TextInput
+                        placeholder="Date"
+                        value={date.toDateString()}
+                        style={styles.topRowInput}
+                        onPress={() => setIsDatePickerVisible(true)}
+                    />
+                </View>
                 <TextInput
                     placeholder="Name"
+                    multiline={true}
                     value={name}
                     onChangeText={setName}
-                    style={styles.input}
-                />
-                <TextInput
-                    placeholder="Amount"
-                    inputMode={"decimal"}
-                    value={amount}
-                    onChangeText={setAmount}
-                    style={styles.input}
-                />
-                <TextInput
-                    placeholder="Date"
-                    value={date.toDateString()}
-                    style={styles.input}
-                    onPress={() => setIsDatePickerVisible(true)}
+                    style={styles.inputMultiLines}
                 />
                 {isDatePickerVisible && (
                     <RNDateTimePicker
@@ -101,13 +116,13 @@ export function ExpenseModal({ visible }: { visible: boolean }) {
                 <View style={styles.buttonContainer}>
                     <MyButton
                         label="Cancel"
-                        addedStyles={{ backgroundColor: Colors.dark.background }}
+                        addedStyles={{backgroundColor: Colors.dark.background}}
                         onPress={hideModal}
                     />
                     <MyButton
                         label={expenseEdited ? 'Edit' : 'Add'}
-                        addedStyles={{ backgroundColor: Colors.dark.backgroundLighter }}
-                        onPress={handleExpense}
+                        addedStyles={{backgroundColor: Colors.dark.backgroundLighter}}
+                        onPress={handleSubmit}
                     />
                 </View>
             </View>
@@ -117,7 +132,7 @@ export function ExpenseModal({ visible }: { visible: boolean }) {
 
 const styles = StyleSheet.create({
     modalHeader: {
-      backgroundColor: Colors.dark.backgroundLighter,
+        backgroundColor: Colors.dark.backgroundLighter,
         height: 50,
         justifyContent: 'center',
         alignItems: 'center',
@@ -133,21 +148,42 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         paddingHorizontal: 16,
         alignItems: 'center',
+        paddingTop: 100,
     },
-    input: {
+    inputMultiLines: {
         borderWidth: 1,
         borderColor: 'black',
-        backgroundColor: 'white',
+        backgroundColor: Colors.dark.backgroundTertiary,
         padding: 8,
         margin: 8,
         borderRadius: 8,
-        width: '100%',
+        width: '95%',
+        minHeight: 100,
+        textAlignVertical: 'top',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         width: '80%',
-        marginVertical: 16,
+        marginTop: 16,
+        marginBottom: 100,
+    },
+    topRowInputs: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    topRowInput: {
+        backgroundColor: Colors.dark.backgroundTertiary,
+        padding: 8,
+        margin: 8,
+        borderRadius: 8,
+        width: '45%',
+    },
+    title: {
+        color: 'white',
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 30,
     }
 });
