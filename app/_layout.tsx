@@ -7,7 +7,6 @@ import 'react-native-reanimated';
 
 import {useColorScheme} from '@/hooks/useColorScheme';
 import {Colors} from "@/constants/Colors";
-import {Text} from "react-native";
 import useExpensesStore from "@/store/expenseStore";
 import {FontAwesome} from "@expo/vector-icons";
 
