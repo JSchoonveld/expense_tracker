@@ -29,17 +29,21 @@ export function ExpenseItem({item}: { item: Expense }) {
 
     const renderLeftActions = () => {
         return (
-            <View style={styles.deleteButton}>
-                <FontAwesome onPress={() => onDelete(item.id)} size={28} name="trash" color={"white"} />
-            </View>
+            <Pressable onPress={() => onDelete(item.id)} style={({pressed}) => [styles.pressable, styles.pressable, pressed ? styles.expensePressed : null]}>
+                <View style={styles.deleteButton}>
+                    <FontAwesome size={28} name="trash" color={"white"} />
+                </View>
+            </Pressable>
         );
     };
 
     const renderRightActions = () => {
         return (
+            <Pressable onPress={() => {}} style={(pressed) => [styles.pressable, pressed ? styles.expensePressed : null]}>
             <View style={styles.archiveButton}>
-                <FontAwesome onPress={() => onDelete(item.id)} size={28} name="folder" color={"white"} />
+                <FontAwesome size={28} name="folder" color={"white"} />
             </View>
+            </Pressable>
         );
     };
 
@@ -63,6 +67,11 @@ export function ExpenseItem({item}: { item: Expense }) {
 }
 
 const styles = StyleSheet.create({
+    pressable: {
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     expenseItemContainer: {
         borderRadius: 8,
         backgroundColor: Colors.dark.backgroundLighter,
@@ -101,6 +110,7 @@ const styles = StyleSheet.create({
         width: 100,
         borderRadius: 8,
         marginVertical: 8,
+        flex: 1,
     },
     archiveButton: {
         backgroundColor: 'blue',
@@ -109,5 +119,6 @@ const styles = StyleSheet.create({
         width: 100,
         borderRadius: 8,
         marginVertical: 8,
+        flex: 1,
     },
 });

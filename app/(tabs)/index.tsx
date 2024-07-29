@@ -38,7 +38,14 @@ export default function TabTwoScreen() {
 
         <ExpenseSummary weekly={true}/>
 
-        <ExpenseList items={thisWeeksExpenses}/>
+        {thisWeeksExpenses.length > 0 ? (
+          <ExpenseList items={thisWeeksExpenses}/>
+        ) : (
+          <View style={styles.container}>
+            <Text style={styles.text}>No expenses this week</Text>
+          </View>
+        )}
+
       </ThemedView>
   );
 }
@@ -49,4 +56,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  text: {
+    color: 'white',
+    fontWeight: 'bold',
+  }
 });
