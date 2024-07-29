@@ -1,8 +1,7 @@
-import {StyleSheet, Text, View, FlatList} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import {ThemedView} from '@/components/ThemedView';
 import {useNavigation} from "expo-router";
-import {useLayoutEffect, useState} from "react";
-import {EXPENSES} from "@/data/dummy-data";
+import {useLayoutEffect} from "react";
 import {ExpenseList} from "@/components/expenses/ExpenseList";
 import {ExpenseSummary} from "@/components/expenses/ExpenseSummary";
 import useExpensesStore from "@/store/expenseStore";
@@ -14,7 +13,6 @@ export default function TabTwoScreen() {
 
   const expenses = useExpensesStore((state) => state.expenses);
   const modalIsVisible = useExpensesStore((state) => state.modalIsVisible);
-  const editExpense = useExpensesStore((state) => state.editExpense);
 
   const thisWeeksExpenses: Expense[] = expenses.filter((expense: Expense) => {
     const expenseDate = new Date(expense.date);
