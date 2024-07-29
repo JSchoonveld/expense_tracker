@@ -1,70 +1,52 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import {StyleSheet, Text, View, FlatList} from 'react-native';
+import {ThemedView} from '@/components/ThemedView';
+import {useNavigation} from "expo-router";
+import {useLayoutEffect, useState} from "react";
+import {EXPENSES} from "@/data/dummy-data";
+import {ExpenseList} from "@/components/expenses/ExpenseList";
+import {ExpenseSummary} from "@/components/expenses/ExpenseSummary";
+import useExpensesStore from "@/store/expenseStore";
+import {ExpenseModal} from "@/components/expenses/ExpenseModal";
+import {Expense} from "@/interfaces/expense";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function TabTwoScreen() {
+  const navigation = useNavigation();
 
-export default function HomeScreen() {
+  const expenses = useExpensesStore((state) => state.expenses);
+  const modalIsVisible = useExpensesStore((state) => state.modalIsVisible);
+  const editExpense = useExpensesStore((state) => state.editExpense);
+
+  const thisWeeksExpenses: Expense[] = expenses.filter((expense: Expense) => {
+    const expenseDate = new Date(expense.date);
+    const today = new Date();
+
+    const oneWeekAgo = new Date(today);
+    oneWeekAgo.setDate(today.getDate() - 7);
+
+    return expenseDate >= oneWeekAgo && expenseDate <= today;
+  });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Recent expenses',
+    });
+  }, [navigation]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+      <ThemedView style={styles.container}>
+        <ExpenseModal visible={modalIsVisible}/>
+
+        <ExpenseSummary weekly={true}/>
+
+        <ExpenseList items={thisWeeksExpenses}/>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
   },
 });
