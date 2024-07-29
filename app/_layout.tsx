@@ -49,7 +49,11 @@ export default function RootLayout() {
                     title: 'Expenses',
                     headerRight: () => {
                         return (
-                            <FontAwesome onPress={showModal} size={28} name="plus" color={"white"} />
+                            <FontAwesome
+                                onPress={showModal}
+                                size={28}
+                                name="plus" color={"white"}
+                            />
                         )}
                 }}/>
                 <Stack.Screen name="+not-found"/>

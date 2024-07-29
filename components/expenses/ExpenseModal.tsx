@@ -6,10 +6,12 @@ import MyButton from "@/components/MyButton";
 import {Expense} from "@/interfaces/expense";
 import RNDateTimePicker, {DateTimePickerEvent} from "@react-native-community/datetimepicker";
 
-export function ExpenseModal({visible}: { visible: boolean }) {
-    const [name, setName] = useState('');
-    const [amount, setAmount] = useState('');
-    const [date, setDate] = useState(new Date());
+
+interface ExpenseModalProps {
+    visible: boolean;
+}
+
+export const ExpenseModal: React.FC<ExpenseModalProps> = ({ visible }) => {
     const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
     const addExpense = useExpensesStore((state) => state.addExpense);
@@ -17,44 +19,68 @@ export function ExpenseModal({visible}: { visible: boolean }) {
     const hideModal = useExpensesStore((state) => state.hideModal);
     const expenseEdited = useExpensesStore((state) => state.expenseBeingEdited);
 
+    const [inputValues, setInputValues] = useState({
+        amount: { value: expenseEdited?.amount ?? 0, isValid: true },
+        name: { value: expenseEdited?.name ?? '', isValid: true },
+        date: { value: expenseEdited ? new Date(expenseEdited.date) : new Date(), isValid: true },
+    });
+
     useEffect(() => {
         if (expenseEdited) {
-            setName(expenseEdited.name);
-            setAmount(expenseEdited.amount.toString());
-            setDate(new Date(expenseEdited.date));
+            setInputValues({
+                amount: { value: expenseEdited.amount, isValid: true },
+                name: { value: expenseEdited.name, isValid: true },
+                date: { value: new Date(expenseEdited.date), isValid: true },
+            });
         } else {
-            setName('');
-            setAmount('');
-            setDate(new Date());
+            setInputValues({
+                amount: { value: 0, isValid: true },
+                name: { value: '', isValid: true },
+                date: { value: new Date(), isValid: true },
+            });
         }
     }, [expenseEdited]);
 
-    const generateId = () => {
+    const closeModal = () => {
+        setInputValues({
+            amount: { value: 0, isValid: true },
+            name: { value: '', isValid: true },
+            date: { value: new Date(), isValid: true },
+        });
+        hideModal();
+    };
+
+    const generateId = (): string => {
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
-    }
+    };
 
     const handleSubmit = (): void => {
-        if (!name || !amount) {
+        const { name, amount, date } = inputValues;
+
+        if (!name.value || !amount.value) {
             return;
         }
 
-        const nameIsValid = name.trim().length > 0;
-
-        const amountIsValid = !isNaN(parseFloat(amount)) && parseFloat(amount) >= 0;
-
-        const dateIsValid = !isNaN(date.getTime());
+        const nameIsValid = name.value.trim().length > 0;
+        const amountIsValid = amount.value > 0 && !isNaN(amount.value);
+        const dateIsValid = !isNaN(date.value.getTime());
 
         if (!nameIsValid || !amountIsValid || !dateIsValid) {
-            // show feedback
+            setInputValues((prevValues) => ({
+                ...prevValues,
+                name: { ...prevValues.name, isValid: nameIsValid },
+                amount: { ...prevValues.amount, isValid: amountIsValid },
+                date: { ...prevValues.date, isValid: dateIsValid },
+            }));
             return;
         }
 
         const expense: Expense = {
             id: expenseEdited ? expenseEdited.id : generateId(),
-            name: name,
-            amount: parseFloat(amount),
-            date: date.toISOString(),
-        } as Expense;
+            name: name.value,
+            amount: parseFloat(String(amount.value)),
+            date: date.value.toISOString(),
+        };
 
         if (expenseEdited) {
             editExpenseDetails(expense);
@@ -62,73 +88,94 @@ export function ExpenseModal({visible}: { visible: boolean }) {
             addExpense(expense);
         }
 
-        setName('');
-        setAmount('');
-        setDate(new Date());
-
-        hideModal();
+        closeModal();
     };
+
+    const inputChangeHandler = (key: string, value: string) => {
+        let isValid = false;
+
+        if (key === 'name') {
+            isValid = value.trim().length > 0;
+        } else if (key === 'amount') {
+            const amountValue = parseFloat(value);
+            isValid = !isNaN(amountValue) && amountValue > 0;
+        }
+
+        setInputValues((prevValues) => ({
+            ...prevValues,
+            [key]: { value: value, isValid: isValid },
+        }));
+    };
+
+    const formIsInvalid: boolean = !inputValues.name.isValid || !inputValues.amount.isValid || !inputValues.date.isValid;
 
     const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         setIsDatePickerVisible(false);
         if (selectedDate) {
-            setDate(selectedDate);
+            setInputValues((prevValues) => ({
+                ...prevValues,
+                date: { value: selectedDate, isValid: true },
+            }));
         }
     };
 
     return (
-        <Modal visible={visible} animationType={"slide"}>
+        <Modal visible={visible} animationType="fade">
             <View style={styles.modalHeader}>
-                <Text style={styles.modalHeaderTitle}>{expenseEdited ? 'Edit expense' : 'Add Expense'}</Text>
+                <Text style={styles.modalHeaderTitle}>{expenseEdited ? 'Edit Expense' : 'Add Expense'}</Text>
             </View>
             <View style={styles.container}>
-                <Text style={styles.title}>Your expense</Text>
+                <Text style={styles.title}>Your Expense</Text>
                 <View style={styles.topRowInputs}>
                     <TextInput
                         placeholder="Amount"
-                        inputMode={"decimal"}
-                        value={amount}
-                        onChangeText={setAmount}
+                        inputMode="decimal"
+                        value={inputValues.amount.value.toString()}
+                        onChangeText={(text) => inputChangeHandler('amount', text)}
                         style={styles.topRowInput}
                     />
                     <TextInput
                         placeholder="Date"
-                        value={date.toDateString()}
+                        value={inputValues.date.value.toDateString()}
                         style={styles.topRowInput}
-                        onPress={() => setIsDatePickerVisible(true)}
+                        onFocus={() => setIsDatePickerVisible(true)}
                     />
                 </View>
                 <TextInput
                     placeholder="Name"
                     multiline={true}
-                    value={name}
-                    onChangeText={setName}
+                    value={inputValues.name.value}
+                    onChangeText={(text) => inputChangeHandler('name', text)}
                     style={styles.inputMultiLines}
                 />
                 {isDatePickerVisible && (
                     <RNDateTimePicker
-                        value={date}
+                        value={inputValues.date.value}
                         mode="date"
                         display="default"
                         onChange={handleDateChange}
                     />
                 )}
+
+                {formIsInvalid && (
+                    <Text style={styles.errorText}>Please fill in all fields</Text>
+                )}
                 <View style={styles.buttonContainer}>
                     <MyButton
                         label="Cancel"
-                        addedStyles={{backgroundColor: Colors.dark.background}}
-                        onPress={hideModal}
+                        addedStyles={{ backgroundColor: Colors.dark.background }}
+                        onPress={closeModal}
                     />
                     <MyButton
                         label={expenseEdited ? 'Edit' : 'Add'}
-                        addedStyles={{backgroundColor: Colors.dark.backgroundLighter}}
+                        addedStyles={{ backgroundColor: Colors.dark.backgroundLighter }}
                         onPress={handleSubmit}
                     />
                 </View>
             </View>
         </Modal>
     );
-}
+};
 
 const styles = StyleSheet.create({
     modalHeader: {
@@ -185,5 +232,8 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 30,
-    }
+    },
+    errorText: {
+        color: 'red',
+    },
 });
